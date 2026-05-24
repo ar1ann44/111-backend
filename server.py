@@ -253,7 +253,44 @@ def get_expense_by_id(expense_id):
     }), 200
 
 
-# UPDATE
+# UPDATE http://127.0.0.1:5000/api/expenses/2
+@app.put("/api/expenses/<int:expense_id>")
+def update_expense_by_id(expense_id):
+    updated_expense = request.get_json()
+    
+    title = updated_expense.get("title", "")
+    description = updated_expense.get("description", "")
+    amount = updated_expense.get("amount", 1)
+    date_expense = updated_expense.get("date", date.today()) 
+    category = updated_expense.get("category", "")
+    user_id = updated_expense.get("user_id", 2)
+    
+    connection = sqlite3.connect(DB_NAME)
+    cursor = connection.cursor()
+    
+    #validation 
+    cursor.execute("SELECT id FROM expenses WHERE id = ?", (expense_id,))
+    row = cursor.fetchone()
+    
+    if not row:
+        return jsonify({
+            "success": False,
+            "message": "expense not found"
+        }), 404
+    
+    cursor.execute(""" 
+        UPDATE expenses 
+        SET title = ?, description = ?, amount = ?, date = ?, category = ?, user_id = ?
+        WHERE id = ?""", (title, description, amount, date_expense, category, user_id, expense_id))
+    
+    connection.commit()
+    connection.close()
+    
+        
+    return jsonify({
+        "success": True,
+        "message": "expense updated successfully"
+    }), 200
 
 # DELETE http://127.0.0.1:5000/api/expenses/2
 @app.delete("/api/expenses/<int:expense_id>")
